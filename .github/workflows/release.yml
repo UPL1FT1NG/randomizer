@@ -1,0 +1,40 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - name: Build executable
+        run: |
+          go build -trimpath -ldflags="-H windowsgui -s -w" -o randomizer.exe
+
+      - name: Generate Artifact Attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: 'randomizer.exe'
+
+      - name: Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: randomizer.exe
+          name: randomizer v1.0
+          generate_release_notes: false
